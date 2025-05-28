@@ -1,23 +1,45 @@
 
-import { useState } from "react";
+import { useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const VideoFeed = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Mock logged in state
+  const { user, signOut, loading } = useAuth();
   const [videos] = useState([]); // Empty for now - will show placeholder
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+    }
+  }, [user, loading, navigate]);
+
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
+
   return (
     <div className="min-h-screen bg-white">
-      <Navigation isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+      <Navigation isLoggedIn={true} onLogout={handleLogout} />
       
       <div className="max-w-7xl mx-auto px-6 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Video Feed</h1>

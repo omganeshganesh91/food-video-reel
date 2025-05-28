@@ -6,17 +6,41 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", { email, password });
-    // Mock login - redirect to feed
-    navigate('/feed');
+    setLoading(true);
+    
+    console.log("Login attempt:", { email });
+    
+    const { error } = await signIn(email, password);
+    
+    if (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      navigate('/feed');
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -55,9 +79,10 @@ const Login = () => {
               </div>
               <Button 
                 type="submit" 
+                disabled={loading}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-full py-3"
               >
-                Sign In
+                {loading ? "Signing In..." : "Sign In"}
               </Button>
             </form>
             

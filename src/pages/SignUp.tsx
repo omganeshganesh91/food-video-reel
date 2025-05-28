@@ -6,18 +6,42 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const SignUp = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signUp } = useAuth();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sign up attempt:", { username, email, password });
-    // Mock sign up - redirect to feed
-    navigate('/feed');
+    setLoading(true);
+    
+    console.log("Sign up attempt:", { username, email });
+    
+    const { error } = await signUp(email, password, username);
+    
+    if (error) {
+      console.error("Sign up error:", error);
+      toast({
+        title: "Sign Up Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Sign Up Successful",
+        description: "Welcome to Hosur Recipes! Please check your email to verify your account.",
+      });
+      navigate('/feed');
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -67,9 +91,10 @@ const SignUp = () => {
               </div>
               <Button 
                 type="submit" 
+                disabled={loading}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-full py-3"
               >
-                Create Account
+                {loading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
             

@@ -96,7 +96,7 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
             onClick={() => navigate('/login')}
             className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6"
           >
-            Contact
+            Sign In
           </Button>
         )}
       </div>
