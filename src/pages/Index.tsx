@@ -41,7 +41,7 @@ const Index = () => {
   ];
 
   return (
-    <div className={`min-h-screen bg-white transition-all duration-600 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+    <div className={`min-h-screen bg-white font-inter transition-all duration-600 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
       <Navigation />
       
       {/* Hero Section */}
