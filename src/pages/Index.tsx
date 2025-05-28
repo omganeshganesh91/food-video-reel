@@ -18,25 +18,113 @@ const Index = () => {
       id: 1,
       title: "Carne Asada",
       image: "https://images.unsplash.com/photo-1551326844-4df70f78d0e9?w=400&h=300&fit=crop",
-      tags: ["Prep", "15min", "Cook", "5min"]
+      description: "Delicious grilled marinated flank steak with Mexican spices, perfect for tacos or served with rice and beans.",
+      prepTime: "15min",
+      cookTime: "5min",
+      servings: "4 servings",
+      tags: ["Beef", "Mexican", "Grilled", "Main Course"],
+      ingredients: [
+        "2 lbs flank steak",
+        "1/4 cup lime juice",
+        "3 cloves garlic, minced",
+        "2 tbsp olive oil",
+        "1 tsp cumin",
+        "Salt and pepper to taste"
+      ],
+      instructions: [
+        "Marinate the steak in lime juice, garlic, olive oil, and spices for 2 hours.",
+        "Preheat grill to high heat.",
+        "Grill steak for 3-4 minutes per side for medium-rare.",
+        "Let rest for 5 minutes, then slice against the grain.",
+        "Serve with warm tortillas and toppings."
+      ],
+      tools: ["Grill", "Mixing Bowl", "Sharp Knife", "Cutting Board"]
     },
     {
       id: 2,
       title: "Greek Rice",
-      image: "https://images.unsplash.com/photo-1563379091339-03246963d513?w=400&h=300&fit=crop",
-      tags: ["Prep", "10min", "Cook", "5min"]
+      image: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&h=300&fit=crop",
+      description: "Traditional Greek rice pilaf with tomatoes, herbs, and aromatic spices. A perfect side dish for Mediterranean meals.",
+      prepTime: "10min",
+      cookTime: "25min",
+      servings: "6 servings",
+      tags: ["Greek", "Vegetarian", "Rice", "Side Dish"],
+      ingredients: [
+        "2 cups long-grain rice",
+        "3 cups chicken or vegetable broth",
+        "1 large onion, diced",
+        "2 tomatoes, diced",
+        "1/4 cup olive oil",
+        "2 tsp dried oregano",
+        "Salt and pepper to taste"
+      ],
+      instructions: [
+        "Heat olive oil in a large pot over medium heat.",
+        "Sauté onion until translucent, about 5 minutes.",
+        "Add rice and stir for 2 minutes until lightly toasted.",
+        "Add tomatoes, broth, oregano, salt, and pepper.",
+        "Bring to boil, then reduce heat and simmer covered for 18-20 minutes.",
+        "Let stand 5 minutes before fluffing with a fork."
+      ],
+      tools: ["Large Pot with Lid", "Wooden Spoon", "Fork", "Measuring Cups"]
     },
     {
       id: 3,
       title: "Vegetable Soup",
       image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&h=300&fit=crop",
-      tags: ["Prep", "15min", "Cook", "5min"]
+      description: "Hearty and nutritious vegetable soup packed with seasonal vegetables in a flavorful broth.",
+      prepTime: "15min",
+      cookTime: "30min",
+      servings: "8 servings",
+      tags: ["Vegetarian", "Healthy", "Soup", "Comfort Food"],
+      ingredients: [
+        "2 tbsp olive oil",
+        "1 large onion, diced",
+        "3 carrots, sliced",
+        "3 celery stalks, diced",
+        "6 cups vegetable broth",
+        "2 cups diced tomatoes",
+        "1 cup green beans, chopped",
+        "Salt and pepper to taste"
+      ],
+      instructions: [
+        "Heat olive oil in a large pot over medium heat.",
+        "Add onion, carrots, and celery. Cook for 8 minutes.",
+        "Add broth, tomatoes, and green beans.",
+        "Bring to boil, then simmer for 20 minutes.",
+        "Season with salt and pepper to taste.",
+        "Serve hot with crusty bread."
+      ],
+      tools: ["Large Soup Pot", "Ladle", "Cutting Board", "Sharp Knife"]
     },
     {
       id: 4,
       title: "Banana Pancakes",
       image: "https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=400&h=300&fit=crop",
-      tags: ["Prep", "10min", "Cook", "5min"]
+      description: "Fluffy and delicious banana pancakes made with ripe bananas and a hint of vanilla. Perfect for weekend breakfast.",
+      prepTime: "10min",
+      cookTime: "15min",
+      servings: "4 servings",
+      tags: ["Breakfast", "Sweet", "Pancakes", "Banana"],
+      ingredients: [
+        "2 ripe bananas, mashed",
+        "2 cups all-purpose flour",
+        "2 tbsp sugar",
+        "2 tsp baking powder",
+        "1/2 tsp salt",
+        "1 3/4 cups milk",
+        "2 eggs",
+        "1/4 cup melted butter"
+      ],
+      instructions: [
+        "Mix flour, sugar, baking powder, and salt in a large bowl.",
+        "In another bowl, whisk together milk, eggs, and melted butter.",
+        "Add wet ingredients to dry ingredients and stir until just combined.",
+        "Fold in mashed bananas.",
+        "Cook pancakes on griddle over medium heat for 2-3 minutes per side.",
+        "Serve warm with maple syrup and fresh fruit."
+      ],
+      tools: ["Mixing Bowls", "Whisk", "Griddle or Pan", "Spatula"]
     }
   ];
 
@@ -94,8 +182,13 @@ const Index = () => {
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-lg mb-2">{recipe.title}</h3>
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{recipe.description}</p>
+                <div className="flex justify-between text-xs text-gray-500 mb-2">
+                  <span>Prep: {recipe.prepTime}</span>
+                  <span>Cook: {recipe.cookTime}</span>
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {recipe.tags.map((tag, index) => (
+                  {recipe.tags.slice(0, 2).map((tag, index) => (
                     <span 
                       key={index}
                       className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded"
