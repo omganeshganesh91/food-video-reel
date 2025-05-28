@@ -22,9 +22,9 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
       <div className="flex items-center space-x-8">
         <h1 
           onClick={() => navigate('/')}
-          className="text-2xl font-bold text-purple-600 cursor-pointer"
+          className="text-2xl font-bold text-gray-900 cursor-pointer"
         >
-          Hosur<span className="text-gray-900">Recipes</span>
+          Hosur<span className="text-gray-600">Recipes</span>
         </h1>
         
         <div className="hidden md:flex items-center space-x-6">
@@ -64,7 +64,7 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
           <>
             <Button 
               onClick={() => navigate('/upload')}
-              className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6"
+              className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6"
             >
               Upload Video
             </Button>
@@ -86,7 +86,7 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
         ) : (
           <Button 
             onClick={() => navigate('/login')}
-            className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6"
+            className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6"
           >
             Contact
           </Button>

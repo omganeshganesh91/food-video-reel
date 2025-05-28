@@ -48,11 +48,11 @@ const Index = () => {
       <div 
         className="relative h-96 bg-cover bg-center flex items-center justify-center"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/lovable-uploads/12e0c22c-ba9f-481f-98d5-38134e3054f3.png')`
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/lovable-uploads/ba582a4b-544a-4d0a-b06d-01cdd86c70d2.png')`
         }}
       >
         <div className="text-center text-white">
-          <h1 className="text-5xl font-bold mb-4">Hosur Recipes</h1>
+          <h1 className="text-6xl font-bold mb-4">Hosur Recipes</h1>
           <p className="text-xl mb-8">No Fluff, Just Recipes</p>
           <div className="space-x-4">
             <Button 
@@ -113,7 +113,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-6">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <p>© 2023 <span className="text-purple-400">Hosur Recipes</span> Built by Out of Pâtée</p>
+          <p>© 2023 <span className="text-gray-400">Hosur Recipes</span> Built by Out of Pâtée</p>
         </div>
       </footer>
     </div>
