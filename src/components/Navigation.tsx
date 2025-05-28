@@ -17,11 +17,19 @@ interface NavigationProps {
 const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
   const navigate = useNavigate();
 
+  const handleLogoClick = () => {
+    if (isLoggedIn) {
+      navigate('/feed');
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100">
       <div className="flex items-center space-x-8">
         <h1 
-          onClick={() => navigate('/')}
+          onClick={handleLogoClick}
           className="text-2xl font-bold text-gray-900 cursor-pointer"
         >
           Hosur<span className="text-gray-600">Recipes</span>
