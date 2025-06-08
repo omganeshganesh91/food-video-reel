@@ -44,11 +44,7 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
   const [signUpUsername, setSignUpUsername] = useState("");
 
   const handleLogoClick = () => {
-    if (isLoggedIn) {
-      navigate('/feed');
-    } else {
-      navigate('/');
-    }
+    navigate('/');
   };
 
   // Get user's initials for avatar
@@ -102,7 +98,7 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
       setShowLoginDialog(false);
       setLoginEmail("");
       setLoginPassword("");
-      navigate('/feed');
+      // Stay on current page - don't redirect
     }
     
     setLoading(false);
@@ -129,7 +125,7 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
       setSignUpEmail("");
       setSignUpPassword("");
       setSignUpUsername("");
-      navigate('/feed');
+      // Stay on current page - don't redirect
     }
     
     setLoading(false);
