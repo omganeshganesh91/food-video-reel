@@ -1,12 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -130,7 +131,7 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen bg-white font-inter transition-all duration-600 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
-      <Navigation />
+      <Navigation isLoggedIn={!!user} />
       
       {/* Hero Section */}
       <div 
@@ -142,21 +143,23 @@ const Index = () => {
         <div className="text-center text-white">
           <h1 className="text-6xl font-bold mb-4">Hosur Recipes</h1>
           <p className="text-xl mb-8">No Fluff, Just Recipes</p>
-          <div className="space-x-4">
-            <Button 
-              onClick={() => navigate('/login')}
-              className="bg-white text-gray-900 hover:bg-gray-100 rounded-full px-8 py-3 font-medium"
-            >
-              Sign In
-            </Button>
-            <Button 
-              onClick={() => navigate('/signup')}
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-gray-900 rounded-full px-8 py-3 font-medium"
-            >
-              Sign Up
-            </Button>
-          </div>
+          {!user && (
+            <div className="space-x-4">
+              <Button 
+                onClick={() => navigate('/login')}
+                className="bg-white text-gray-900 hover:bg-gray-100 rounded-full px-8 py-3 font-medium"
+              >
+                Sign In
+              </Button>
+              <Button 
+                onClick={() => navigate('/signup')}
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-gray-900 rounded-full px-8 py-3 font-medium"
+              >
+                Sign Up
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

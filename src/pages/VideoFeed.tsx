@@ -1,20 +1,16 @@
+
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import Index from "./Index";
 
 const VideoFeed = () => {
   const { user, signOut, loading } = useAuth();
   const [videos] = useState([]); // Empty for now - will show placeholder
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
-    }
-  }, [user, loading, navigate]);
 
   const handleLogout = async () => {
     await signOut();
@@ -32,8 +28,9 @@ const VideoFeed = () => {
     );
   }
 
+  // If user is not logged in, show the home page instead of redirecting
   if (!user) {
-    return null; // Will redirect to login
+    return <Index />;
   }
 
   return (
