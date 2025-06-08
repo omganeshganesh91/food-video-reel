@@ -28,7 +28,7 @@ interface NavigationProps {
 
 const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showSignUpDialog, setShowSignUpDialog] = useState(false);
@@ -49,6 +49,37 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
     } else {
       navigate('/');
     }
+  };
+
+  // Get user's initials for avatar
+  const getUserInitials = () => {
+    if (!user) return "U";
+    
+    const email = user.email || "";
+    const username = user.user_metadata?.username || "";
+    
+    if (username) {
+      return username.substring(0, 2).toUpperCase();
+    }
+    
+    if (email) {
+      return email.substring(0, 2).toUpperCase();
+    }
+    
+    return "U";
+  };
+
+  // Get display name for user
+  const getDisplayName = () => {
+    if (!user) return "User";
+    
+    const username = user.user_metadata?.username;
+    if (username) return username;
+    
+    const email = user.email;
+    if (email) return email.split('@')[0];
+    
+    return "User";
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -158,11 +189,17 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Avatar className="cursor-pointer">
-                    <AvatarFallback className="bg-gray-200 text-gray-700">
-                      U
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-purple-600 text-white text-sm font-medium">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="hidden md:block text-left">
+                      <p className="text-sm font-medium text-gray-900">{getDisplayName()}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                  </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={onLogout}>
