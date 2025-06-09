@@ -8,6 +8,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -17,6 +22,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -175,6 +181,12 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Search input with rounded style and no border */}
+          <Input
+            placeholder="Search recipes..."
+            className="rounded-full border-0 bg-gray-100 px-4 py-2 focus-visible:ring-1 focus-visible:ring-gray-300"
+          />
+          
           {isLoggedIn ? (
             <>
               <Button 
@@ -183,12 +195,12 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
               >
                 Upload Video
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              <Popover>
+                <PopoverTrigger asChild>
                   <div className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-purple-600 text-white text-sm font-medium">
-                        {getUserInitials()}
+                        <User className="h-4 w-4" />
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden md:block text-left">
@@ -196,13 +208,24 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                   </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={onLogout}>
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </PopoverTrigger>
+                <PopoverContent className="w-48" align="end">
+                  <div className="space-y-2">
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-medium">{getDisplayName()}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      onClick={onLogout}
+                      className="w-full justify-start text-left"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Log out
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </>
           ) : (
             <Button 

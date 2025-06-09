@@ -40,7 +40,7 @@ const VideoFeed = () => {
           <div className="text-center py-16">
             <div className="w-64 h-64 mx-auto mb-8 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
               <img 
-                src="/lovable-uploads/98e4228d-3179-4020-bc06-0b2c8c88dc8d.png" 
+                src="/lovable-uploads/cea33b3d-a265-4002-8a1c-6b8a0f3f2dc6.png" 
                 alt="Delicious food spread"
                 className="w-full h-full object-cover"
               />
