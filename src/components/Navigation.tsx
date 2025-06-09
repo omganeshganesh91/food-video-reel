@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +25,7 @@ import { User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import VideoUploadModal from "@/components/VideoUploadModal";
 
 interface NavigationProps {
   isLoggedIn?: boolean;
@@ -38,6 +38,7 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
   const { toast } = useToast();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showSignUpDialog, setShowSignUpDialog] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [loading, setLoading] = useState(false);
   
   // Login form state
@@ -51,6 +52,14 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
 
   const handleLogoClick = () => {
     navigate('/');
+  };
+
+  const handleUploadClick = () => {
+    if (isLoggedIn) {
+      setShowUploadModal(true);
+    } else {
+      setShowLoginDialog(true);
+    }
   };
 
   // Get user's initials for avatar
@@ -190,7 +199,7 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
           {isLoggedIn ? (
             <>
               <Button 
-                onClick={() => navigate('/upload')}
+                onClick={handleUploadClick}
                 className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6"
               >
                 Upload Video
@@ -360,6 +369,12 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Video Upload Modal */}
+      <VideoUploadModal
+        open={showUploadModal}
+        onOpenChange={setShowUploadModal}
+      />
     </>
   );
 };

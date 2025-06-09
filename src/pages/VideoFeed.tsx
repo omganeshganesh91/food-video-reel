@@ -5,15 +5,25 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import VideoUploadModal from "@/components/VideoUploadModal";
 
 const VideoFeed = () => {
   const { user, signOut, loading } = useAuth();
   const [videos] = useState([]); // Empty for now - will show placeholder
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await signOut();
     navigate('/');
+  };
+
+  const handleUploadClick = () => {
+    if (user) {
+      setShowUploadModal(true);
+    } else {
+      navigate('/login');
+    }
   };
 
   if (loading) {
@@ -53,7 +63,7 @@ const VideoFeed = () => {
             </p>
             {user ? (
               <Button 
-                onClick={() => navigate('/upload')}
+                onClick={handleUploadClick}
                 className="bg-gray-900 hover:bg-gray-800 text-white rounded-full px-8 py-3"
               >
                 Upload
@@ -87,6 +97,11 @@ const VideoFeed = () => {
           </div>
         )}
       </div>
+
+      <VideoUploadModal 
+        open={showUploadModal} 
+        onOpenChange={setShowUploadModal} 
+      />
     </div>
   );
 };
