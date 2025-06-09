@@ -181,10 +181,10 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* Search input with rounded style and no border */}
+          {/* Search input with rounded style, no border, shorter width and more horizontal padding */}
           <Input
             placeholder="Search recipes..."
-            className="rounded-full border-0 bg-gray-100 px-4 py-2 focus-visible:ring-1 focus-visible:ring-gray-300"
+            className="w-48 rounded-full border-0 bg-gray-100 px-6 py-2 focus-visible:ring-1 focus-visible:ring-gray-300"
           />
           
           {isLoggedIn ? (
