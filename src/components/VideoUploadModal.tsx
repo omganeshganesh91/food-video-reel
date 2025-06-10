@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface VideoUploadModalProps {
   open: boolean;
@@ -19,32 +20,111 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to upload videos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!title || !description || !thumbnail || !video) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all fields and select both a thumbnail and video file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     
     try {
-      // This is a placeholder - would connect to backend in a real app
-      console.log("Uploading:", { title, description, thumbnail, video });
+      console.log("Starting video upload process...");
+
+      // Upload thumbnail
+      const thumbnailExt = thumbnail.name.split('.').pop();
+      const thumbnailPath = `${user.id}/thumbnail_${Date.now()}.${thumbnailExt}`;
       
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("Uploading thumbnail:", thumbnailPath);
+      const { data: thumbnailData, error: thumbnailError } = await supabase.storage
+        .from('thumbnails')
+        .upload(thumbnailPath, thumbnail);
+
+      if (thumbnailError) {
+        console.error("Thumbnail upload error:", thumbnailError);
+        throw new Error(`Thumbnail upload failed: ${thumbnailError.message}`);
+      }
+
+      // Upload video
+      const videoExt = video.name.split('.').pop();
+      const videoPath = `${user.id}/video_${Date.now()}.${videoExt}`;
       
+      console.log("Uploading video:", videoPath);
+      const { data: videoData, error: videoError } = await supabase.storage
+        .from('videos')
+        .upload(videoPath, video);
+
+      if (videoError) {
+        console.error("Video upload error:", videoError);
+        throw new Error(`Video upload failed: ${videoError.message}`);
+      }
+
+      // Get public URLs
+      const { data: thumbnailUrl } = supabase.storage
+        .from('thumbnails')
+        .getPublicUrl(thumbnailPath);
+
+      const { data: videoUrl } = supabase.storage
+        .from('videos')
+        .getPublicUrl(videoPath);
+
+      console.log("Files uploaded successfully, saving metadata...");
+
+      // Save video metadata to database
+      const { data: videoRecord, error: dbError } = await supabase
+        .from('videos')
+        .insert({
+          user_id: user.id,
+          title,
+          description,
+          thumbnail_url: thumbnailUrl.publicUrl,
+          video_url: videoUrl.publicUrl,
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error("Database error:", dbError);
+        throw new Error(`Failed to save video metadata: ${dbError.message}`);
+      }
+
+      console.log("Video uploaded successfully:", videoRecord);
+
       toast({
         title: "Upload Successful",
         description: "Your video has been uploaded successfully!",
       });
       
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setThumbnail(null);
+      setVideo(null);
       onOpenChange(false);
-      // In a real app, we might refresh the video list or navigate
+      
     } catch (error) {
       console.error("Upload error:", error);
       toast({
         title: "Upload Failed",
-        description: "There was an error uploading your video. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error uploading your video. Please try again.",
         variant: "destructive",
       });
     } finally {

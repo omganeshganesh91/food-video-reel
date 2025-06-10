@@ -1,15 +1,27 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import VideoUploadModal from "@/components/VideoUploadModal";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Video {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  video_url: string;
+  created_at: string;
+  user_id: string;
+}
 
 const VideoFeed = () => {
   const { user, signOut, loading } = useAuth();
-  const [videos] = useState([]); // Empty for now - will show placeholder
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [videosLoading, setVideosLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const navigate = useNavigate();
 
@@ -26,7 +38,41 @@ const VideoFeed = () => {
     }
   };
 
-  if (loading) {
+  const fetchVideos = async () => {
+    try {
+      console.log("Fetching videos from database...");
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching videos:", error);
+        return;
+      }
+
+      console.log("Fetched videos:", data);
+      setVideos(data || []);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+    } finally {
+      setVideosLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  // Refresh videos when upload modal closes
+  const handleUploadModalChange = (open: boolean) => {
+    setShowUploadModal(open);
+    if (!open) {
+      fetchVideos();
+    }
+  };
+
+  if (loading || videosLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -37,8 +83,6 @@ const VideoFeed = () => {
     );
   }
 
-  // Show feed page for both logged in and non-logged in users
-  // Non-logged in users will see sign in options in the navigation
   return (
     <div className="min-h-screen bg-white">
       <Navigation isLoggedIn={!!user} onLogout={handleLogout} />
@@ -79,17 +123,20 @@ const VideoFeed = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {videos.map((video: any) => (
+            {videos.map((video) => (
               <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow rounded-xl">
                 <div className="aspect-video bg-gray-200">
-                  {/* Video thumbnail will go here */}
+                  <img 
+                    src={video.thumbnail_url} 
+                    alt={video.title}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-lg mb-2">{video.title}</h3>
-                  <p className="text-gray-600 text-sm mb-2">by {video.creator}</p>
+                  <p className="text-gray-600 text-sm mb-2 line-clamp-2">{video.description}</p>
                   <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>{video.likes} likes</span>
-                    <span>{video.comments} comments</span>
+                    <span>{new Date(video.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
               </Card>
@@ -100,7 +147,7 @@ const VideoFeed = () => {
 
       <VideoUploadModal 
         open={showUploadModal} 
-        onOpenChange={setShowUploadModal} 
+        onOpenChange={handleUploadModalChange} 
       />
     </div>
   );
