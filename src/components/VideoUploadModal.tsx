@@ -28,7 +28,7 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
     
     console.log("Upload attempt started");
     console.log("User:", user);
-    console.log("Session:", session);
+    console.log("Session exists:", !!session);
     
     if (!user || !session) {
       console.log("No user or session found");
@@ -54,8 +54,17 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
     try {
       console.log("Starting video upload process...");
       console.log("User ID:", user.id);
-      console.log("User role:", user.role);
-      console.log("Session valid:", !!session.access_token);
+      console.log("Session access token exists:", !!session.access_token);
+
+      // Verify authentication before proceeding
+      const { data: currentSession, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !currentSession.session) {
+        console.error("Session verification failed:", sessionError);
+        throw new Error("Authentication session invalid. Please log out and log back in.");
+      }
+
+      console.log("Session verified successfully");
 
       // Upload thumbnail
       const thumbnailExt = thumbnail.name.split('.').pop();
@@ -102,15 +111,7 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
       console.log("Thumbnail URL:", thumbnailUrl.publicUrl);
       console.log("Video URL:", videoUrl.publicUrl);
 
-      // Check current user session before inserting
-      const { data: currentSession } = await supabase.auth.getSession();
-      console.log("Current session before insert:", currentSession);
-
-      if (!currentSession.session || !currentSession.session.user) {
-        throw new Error("Session expired. Please log in again.");
-      }
-
-      // Save video metadata to database with explicit user_id
+      // Save video metadata to database
       const insertData = {
         user_id: user.id,
         title: title.trim(),
@@ -120,7 +121,6 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
       };
 
       console.log("Inserting video metadata:", insertData);
-      console.log("Current auth user:", currentSession.session.user.id);
 
       const { data: videoRecord, error: dbError } = await supabase
         .from('videos')
@@ -135,11 +135,14 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
         console.error("Database error hint:", dbError.hint);
         console.error("Database error message:", dbError.message);
         
-        if (dbError.code === '42501' || dbError.message.includes('row-level security')) {
-          throw new Error("Permission denied. Please make sure you are properly authenticated and try again. You may need to log out and log back in.");
+        // More specific error handling
+        if (dbError.code === '42501') {
+          throw new Error("Database permission error. Please try logging out and logging back in, then try again.");
+        } else if (dbError.message.includes('row-level security')) {
+          throw new Error("Security policy error. Please ensure you are properly authenticated.");
+        } else {
+          throw new Error(`Database error: ${dbError.message}`);
         }
-        
-        throw new Error(`Failed to save video metadata: ${dbError.message}`);
       }
 
       console.log("Video uploaded successfully:", videoRecord);
