@@ -18,21 +18,24 @@ ALTER TABLE public.videos ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view all videos" 
   ON public.videos 
   FOR SELECT 
-  TO public;
+  TO authenticated, anon;
 
-CREATE POLICY "Users can create their own videos" 
+CREATE POLICY "Authenticated users can create videos" 
   ON public.videos 
   FOR INSERT 
+  TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own videos" 
   ON public.videos 
   FOR UPDATE 
+  TO authenticated
   USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own videos" 
   ON public.videos 
   FOR DELETE 
+  TO authenticated
   USING (auth.uid() = user_id);
 
 -- Create storage buckets for videos and thumbnails
@@ -41,27 +44,43 @@ INSERT INTO storage.buckets (id, name, public) VALUES
   ('thumbnails', 'thumbnails', true);
 
 -- Create storage policies for videos bucket
-CREATE POLICY "Users can upload videos" ON storage.objects
-  FOR INSERT WITH CHECK (bucket_id = 'videos' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Authenticated users can upload videos" ON storage.objects
+  FOR INSERT 
+  TO authenticated
+  WITH CHECK (bucket_id = 'videos' AND auth.uid()::text = (storage.foldername(name))[1]);
 
 CREATE POLICY "Anyone can view videos" ON storage.objects
-  FOR SELECT USING (bucket_id = 'videos');
+  FOR SELECT 
+  TO authenticated, anon
+  USING (bucket_id = 'videos');
 
-CREATE POLICY "Users can update their own videos" ON storage.objects
-  FOR UPDATE USING (bucket_id = 'videos' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users can update their own videos in storage" ON storage.objects
+  FOR UPDATE 
+  TO authenticated
+  USING (bucket_id = 'videos' AND auth.uid()::text = (storage.foldername(name))[1]);
 
-CREATE POLICY "Users can delete their own videos" ON storage.objects
-  FOR DELETE USING (bucket_id = 'videos' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users can delete their own videos in storage" ON storage.objects
+  FOR DELETE 
+  TO authenticated
+  USING (bucket_id = 'videos' AND auth.uid()::text = (storage.foldername(name))[1]);
 
 -- Create storage policies for thumbnails bucket
-CREATE POLICY "Users can upload thumbnails" ON storage.objects
-  FOR INSERT WITH CHECK (bucket_id = 'thumbnails' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Authenticated users can upload thumbnails" ON storage.objects
+  FOR INSERT 
+  TO authenticated
+  WITH CHECK (bucket_id = 'thumbnails' AND auth.uid()::text = (storage.foldername(name))[1]);
 
 CREATE POLICY "Anyone can view thumbnails" ON storage.objects
-  FOR SELECT USING (bucket_id = 'thumbnails');
+  FOR SELECT 
+  TO authenticated, anon
+  USING (bucket_id = 'thumbnails');
 
-CREATE POLICY "Users can update their own thumbnails" ON storage.objects
-  FOR UPDATE USING (bucket_id = 'thumbnails' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users can update their own thumbnails in storage" ON storage.objects
+  FOR UPDATE 
+  TO authenticated
+  USING (bucket_id = 'thumbnails' AND auth.uid()::text = (storage.foldername(name))[1]);
 
-CREATE POLICY "Users can delete their own thumbnails" ON storage.objects
-  FOR DELETE USING (bucket_id = 'thumbnails' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users can delete their own thumbnails in storage" ON storage.objects
+  FOR DELETE 
+  TO authenticated
+  USING (bucket_id = 'thumbnails' AND auth.uid()::text = (storage.foldername(name))[1]);
