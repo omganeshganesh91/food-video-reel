@@ -21,12 +21,17 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
   const [video, setVideo] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
+    console.log("Upload attempt started");
+    console.log("User:", user);
+    console.log("Session:", session);
+    
+    if (!user || !session) {
+      console.log("No user or session found");
       toast({
         title: "Authentication Required",
         description: "Please sign in to upload videos.",
@@ -48,6 +53,7 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
     
     try {
       console.log("Starting video upload process...");
+      console.log("User ID:", user.id);
 
       // Upload thumbnail
       const thumbnailExt = thumbnail.name.split('.').pop();
@@ -87,22 +93,41 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
         .getPublicUrl(videoPath);
 
       console.log("Files uploaded successfully, saving metadata...");
+      console.log("Thumbnail URL:", thumbnailUrl.publicUrl);
+      console.log("Video URL:", videoUrl.publicUrl);
 
-      // Save video metadata to database
+      // Verify we have a valid user ID before inserting
+      if (!user.id) {
+        throw new Error("User ID is not available");
+      }
+
+      // Save video metadata to database with explicit user_id
+      const insertData = {
+        user_id: user.id,
+        title: title.trim(),
+        description: description.trim(),
+        thumbnail_url: thumbnailUrl.publicUrl,
+        video_url: videoUrl.publicUrl,
+      };
+
+      console.log("Inserting video metadata:", insertData);
+
       const { data: videoRecord, error: dbError } = await supabase
         .from('videos')
-        .insert({
-          user_id: user.id,
-          title,
-          description,
-          thumbnail_url: thumbnailUrl.publicUrl,
-          video_url: videoUrl.publicUrl,
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (dbError) {
         console.error("Database error:", dbError);
+        console.error("Database error code:", dbError.code);
+        console.error("Database error details:", dbError.details);
+        console.error("Database error hint:", dbError.hint);
+        
+        if (dbError.code === '42501' || dbError.message.includes('row-level security')) {
+          throw new Error("Permission denied. Please make sure you are properly authenticated and try again.");
+        }
+        
         throw new Error(`Failed to save video metadata: ${dbError.message}`);
       }
 
@@ -203,7 +228,7 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
             <Button 
               type="submit" 
               className="bg-purple-600 hover:bg-purple-700 text-white"
-              disabled={loading}
+              disabled={loading || !user}
             >
               {loading ? "Uploading..." : "Upload Video"}
             </Button>
