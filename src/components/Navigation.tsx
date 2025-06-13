@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +35,7 @@ interface NavigationProps {
 
 const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
   const navigate = useNavigate();
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, signOut, user } = useAuth();
   const { toast } = useToast();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showSignUpDialog, setShowSignUpDialog] = useState(false);
@@ -59,6 +60,27 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
       setShowUploadModal(true);
     } else {
       setShowLoginDialog(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+      navigate('/');
+      if (onLogout) {
+        onLogout();
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout Error",
+        description: "There was an error logging out. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -226,7 +248,7 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
                     </div>
                     <Button 
                       variant="ghost" 
-                      onClick={onLogout}
+                      onClick={handleLogout}
                       className="w-full justify-start text-left"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
