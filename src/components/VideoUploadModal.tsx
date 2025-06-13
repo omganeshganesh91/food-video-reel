@@ -54,11 +54,11 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
     try {
       console.log("Starting video upload process...");
       
-      // First, refresh the session to ensure we have valid tokens
-      const { data: refreshedSession, error: refreshError } = await supabase.auth.refreshSession();
+      // Get the current session to ensure we have fresh tokens
+      const { data: currentSession, error: sessionError } = await supabase.auth.getSession();
       
-      if (refreshError || !refreshedSession.session) {
-        console.error("Session refresh failed:", refreshError);
+      if (sessionError || !currentSession.session) {
+        console.error("Session error:", sessionError);
         toast({
           title: "Authentication Error",
           description: "Please log out and log back in to continue.",
@@ -67,11 +67,11 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
         return;
       }
 
-      console.log("Session refreshed successfully");
+      console.log("Current session validated");
 
       // Upload thumbnail
       const thumbnailExt = thumbnail.name.split('.').pop();
-      const thumbnailPath = `${user.id}/thumbnail_${Date.now()}.${thumbnailExt}`;
+      const thumbnailPath = `${currentSession.session.user.id}/thumbnail_${Date.now()}.${thumbnailExt}`;
       
       console.log("Uploading thumbnail:", thumbnailPath);
       const { data: thumbnailData, error: thumbnailError } = await supabase.storage
@@ -87,7 +87,7 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
 
       // Upload video
       const videoExt = video.name.split('.').pop();
-      const videoPath = `${user.id}/video_${Date.now()}.${videoExt}`;
+      const videoPath = `${currentSession.session.user.id}/video_${Date.now()}.${videoExt}`;
       
       console.log("Uploading video:", videoPath);
       const { data: videoData, error: videoError } = await supabase.storage
@@ -112,9 +112,9 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
 
       console.log("Files uploaded successfully, saving metadata...");
 
-      // Save video metadata to database with explicit user_id from current session
+      // Save video metadata to database with current user ID
       const insertData = {
-        user_id: refreshedSession.session.user.id, // Use user ID from refreshed session
+        user_id: currentSession.session.user.id,
         title: title.trim(),
         description: description.trim(),
         thumbnail_url: thumbnailUrl.publicUrl,
@@ -122,6 +122,7 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
       };
 
       console.log("Inserting video metadata:", insertData);
+      console.log("Current user from session:", currentSession.session.user.id);
 
       const { data: videoRecord, error: dbError } = await supabase
         .from('videos')
@@ -131,12 +132,15 @@ const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) => {
 
       if (dbError) {
         console.error("Database error:", dbError);
+        console.error("Database error code:", dbError.code);
+        console.error("Database error details:", dbError.details);
+        console.error("Database error hint:", dbError.hint);
         
         // Clean up uploaded files if database insertion fails
         await supabase.storage.from('thumbnails').remove([thumbnailPath]);
         await supabase.storage.from('videos').remove([videoPath]);
         
-        throw new Error(`Failed to save video: ${dbError.message}. Please try logging out and back in.`);
+        throw new Error(`Failed to save video: ${dbError.message}`);
       }
 
       console.log("Video uploaded successfully:", videoRecord);
