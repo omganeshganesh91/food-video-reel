@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import VideoUploadModal from "@/components/VideoUploadModal";
 import { supabase } from "@/integrations/supabase/client";
+import { Heart, MessageCircle } from "lucide-react";
 
 interface Video {
   id: string;
@@ -16,6 +17,10 @@ interface Video {
   video_url: string;
   created_at: string;
   user_id: string;
+  // Placeholder props for author name, like count, and comment count
+  author?: string;
+  likes?: number;
+  comments?: number;
 }
 
 const VideoFeed = () => {
@@ -40,7 +45,6 @@ const VideoFeed = () => {
 
   const fetchVideos = async () => {
     try {
-      console.log("Fetching videos from database...");
       const { data, error } = await supabase
         .from('videos')
         .select('*')
@@ -50,9 +54,15 @@ const VideoFeed = () => {
         console.error("Error fetching videos:", error);
         return;
       }
-
-      console.log("Fetched videos:", data);
-      setVideos(data || []);
+      // Mocked extra fields since db does not have likes/comments/authors yet
+      setVideos(
+        (data || []).map((v, i) => ({
+          ...v,
+          author: "JesseJean",
+          likes: 24,
+          comments: 12,
+        }))
+      );
     } catch (error) {
       console.error("Error fetching videos:", error);
     } finally {
@@ -86,10 +96,8 @@ const VideoFeed = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navigation isLoggedIn={!!user} onLogout={handleLogout} />
-      
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Video Feed</h1>
-        
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-8">Video Feed</h1>
         {videos.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-64 h-64 mx-auto mb-8 rounded-xl flex items-center justify-center overflow-hidden p-4">
@@ -122,21 +130,38 @@ const VideoFeed = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-8">
             {videos.map((video) => (
-              <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow rounded-xl">
-                <div className="aspect-video bg-gray-200">
-                  <img 
-                    src={video.thumbnail_url} 
+              <Card
+                key={video.id}
+                className="overflow-hidden rounded-2xl border border-gray-200 shadow transition-shadow hover:shadow-lg p-0 bg-white"
+              >
+                <div className="relative aspect-video w-full rounded-t-2xl overflow-hidden">
+                  <img
+                    src={video.thumbnail_url}
                     alt={video.title}
                     className="w-full h-full object-cover"
                   />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2">{video.title}</h3>
-                  <p className="text-gray-600 text-sm mb-2 line-clamp-2">{video.description}</p>
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>{new Date(video.created_at).toLocaleDateString()}</span>
+                  {/* Gradient overlay at bottom */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/90"></div>
+                  {/* Info content */}
+                  <div className="absolute left-0 right-0 bottom-0 p-4 flex flex-col">
+                    <span className="text-lg font-semibold text-white mb-1 drop-shadow">
+                      {video.title}
+                    </span>
+                    <span className="text-sm text-gray-300 mb-2">
+                      By {video.author || "Unknown"}
+                    </span>
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center space-x-1 text-white/90">
+                        <Heart size={18} className="inline" />
+                        <span className="ml-1 text-sm">{video.likes ?? 0}</span>
+                      </div>
+                      <div className="flex items-center space-x-1 text-white/90">
+                        <MessageCircle size={18} className="inline" />
+                        <span className="ml-1 text-sm">{video.comments ?? 0}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -144,7 +169,6 @@ const VideoFeed = () => {
           </div>
         )}
       </div>
-
       <VideoUploadModal 
         open={showUploadModal} 
         onOpenChange={handleUploadModalChange} 
