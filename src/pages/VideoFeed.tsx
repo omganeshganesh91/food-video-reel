@@ -43,7 +43,41 @@ const VideoFeed = () => {
     }
   };
 
+  // Fetch like and comment counts for multiple videos and merge data
+  const fetchCounts = async (videoIds: string[]) => {
+    // Likes
+    let likesCounts: Record<string, number> = {};
+    let commentsCounts: Record<string, number> = {};
+    if (videoIds.length === 0) return { likesCounts, commentsCounts };
+
+    // Aggregate the counts using Supabase
+    // Fetch all likes for these videos
+    const { data: likes, error: likesError } = await supabase
+      .from('video_likes')
+      .select('video_id')
+      .in('video_id', videoIds);
+    if (!likesError && likes) {
+      likes.forEach((like: { video_id: string }) => {
+        likesCounts[like.video_id] = (likesCounts[like.video_id] || 0) + 1;
+      });
+    }
+
+    // Fetch all comments for these videos
+    const { data: comments, error: commentsError } = await supabase
+      .from('video_comments')
+      .select('video_id')
+      .in('video_id', videoIds);
+    if (!commentsError && comments) {
+      comments.forEach((comment: { video_id: string }) => {
+        commentsCounts[comment.video_id] = (commentsCounts[comment.video_id] || 0) + 1;
+      });
+    }
+
+    return { likesCounts, commentsCounts };
+  };
+
   const fetchVideos = async () => {
+    setVideosLoading(true);
     try {
       const { data, error } = await supabase
         .from('videos')
@@ -52,14 +86,23 @@ const VideoFeed = () => {
 
       if (error) {
         console.error("Error fetching videos:", error);
+        setVideosLoading(false);
         return;
       }
+      const videoList: Video[] = (data || []).map((v) => ({
+        ...v,
+        author: "Anonymous",
+      }));
+
+      // Fetch counts
+      const ids = videoList.map((v) => v.id);
+      const { likesCounts, commentsCounts } = await fetchCounts(ids);
+
       setVideos(
-        (data || []).map((v, i) => ({
+        videoList.map((v) => ({
           ...v,
-          author: "Anonymous",
-          likes: 24,
-          comments: 12,
+          likes: likesCounts[v.id] || 0,
+          comments: commentsCounts[v.id] || 0,
         }))
       );
     } catch (error) {
@@ -71,6 +114,7 @@ const VideoFeed = () => {
 
   useEffect(() => {
     fetchVideos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleUploadModalChange = (open: boolean) => {
@@ -191,3 +235,4 @@ const VideoFeed = () => {
 };
 
 export default VideoFeed;
+
