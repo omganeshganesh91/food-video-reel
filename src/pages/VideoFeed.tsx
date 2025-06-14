@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -45,7 +44,6 @@ const VideoFeed = () => {
 
   // Fetch like and comment counts for multiple videos and merge data
   const fetchCounts = async (videoIds: string[]) => {
-    // Likes
     let likesCounts: Record<string, number> = {};
     let commentsCounts: Record<string, number> = {};
     if (videoIds.length === 0) return { likesCounts, commentsCounts };
@@ -55,23 +53,37 @@ const VideoFeed = () => {
     const { data: likes, error: likesError } = await supabase
       .from('video_likes')
       .select('video_id')
-      .in('video_id', videoIds);
-    if (!likesError && likes) {
+    if (likesError) {
+      console.error("Failed to get likes:", likesError);
+    }
+    if (likes) {
       likes.forEach((like: { video_id: string }) => {
-        likesCounts[like.video_id] = (likesCounts[like.video_id] || 0) + 1;
+        if (like.video_id)
+          likesCounts[like.video_id] = (likesCounts[like.video_id] || 0) + 1;
       });
+    } else {
+      console.warn("Likes are null/undefined", likes);
     }
 
     // Fetch all comments for these videos
     const { data: comments, error: commentsError } = await supabase
       .from('video_comments')
       .select('video_id')
-      .in('video_id', videoIds);
-    if (!commentsError && comments) {
-      comments.forEach((comment: { video_id: string }) => {
-        commentsCounts[comment.video_id] = (commentsCounts[comment.video_id] || 0) + 1;
-      });
+    if (commentsError) {
+      console.error("Failed to get comments:", commentsError);
     }
+    if (comments) {
+      comments.forEach((comment: { video_id: string }) => {
+        if (comment.video_id)
+          commentsCounts[comment.video_id] = (commentsCounts[comment.video_id] || 0) + 1;
+      });
+    } else {
+      console.warn("Comments are null/undefined", comments);
+    }
+
+    // Debug output for both counts:
+    console.log("LikesCounts:", likesCounts);
+    console.log("CommentsCounts:", commentsCounts);
 
     return { likesCounts, commentsCounts };
   };
@@ -95,16 +107,16 @@ const VideoFeed = () => {
       }));
 
       // Fetch counts
-      const ids = videoList.map((v) => v.id);
+      const ids = videoList.map((v) => v.id).filter(Boolean);
       const { likesCounts, commentsCounts } = await fetchCounts(ids);
 
-      setVideos(
-        videoList.map((v) => ({
-          ...v,
-          likes: likesCounts[v.id] || 0,
-          comments: commentsCounts[v.id] || 0,
-        }))
-      );
+      const patched = videoList.map((v) => ({
+        ...v,
+        likes: typeof likesCounts[v.id] === 'number' ? likesCounts[v.id] : 0,
+        comments: typeof commentsCounts[v.id] === 'number' ? commentsCounts[v.id] : 0,
+      }));
+      console.log("Patched video list: ", patched);
+      setVideos(patched);
     } catch (error) {
       console.error("Error fetching videos:", error);
     } finally {
@@ -235,4 +247,3 @@ const VideoFeed = () => {
 };
 
 export default VideoFeed;
-
