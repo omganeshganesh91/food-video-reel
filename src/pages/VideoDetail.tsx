@@ -7,6 +7,7 @@ import Navigation from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Heart } from "lucide-react";
+import FloatingHeart from "@/components/FloatingHeart";
 
 interface Comment {
   id: string;
@@ -28,6 +29,7 @@ const VideoDetail = () => {
   const [postingComment, setPostingComment] = useState(false);
   const [video, setVideo] = useState<{ title: string; description: string; user_id: string; created_at: string } | null>(null);
   const [videoLoading, setVideoLoading] = useState(true);
+  const [showHeartAnim, setShowHeartAnim] = useState(false);
 
   const navigate = useNavigate();
 
@@ -114,9 +116,9 @@ const VideoDetail = () => {
         setLiked(true);
         setLikesCount((count) => count + 1);
         setLikeId(data.id);
+        setShowHeartAnim(true); // Show heart animation only on like
       }
     }
-    // Refresh from db to keep totals correct if needed
     fetchLikes();
   };
 
@@ -152,6 +154,8 @@ const VideoDetail = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Floating heart animation */}
+      <FloatingHeart show={showHeartAnim} onAnimationEnd={() => setShowHeartAnim(false)} />
       <Navigation isLoggedIn={!!user} onLogout={() => navigate('/')} />
 
       <div className="max-w-4xl mx-auto px-6 py-8">
@@ -172,10 +176,21 @@ const VideoDetail = () => {
             <Button
               onClick={handleLike}
               variant={liked ? "default" : "outline"}
-              className={`rounded-full flex items-center gap-2`}
+              className={`rounded-full flex items-center gap-2 transition-colors ${
+                liked ? "bg-red-500 text-white hover:bg-red-600" : ""
+              }`}
               disabled={!user}
+              aria-label={liked ? "Unlike video" : "Like video"}
+              style={{ transition: "background 0.2s" }}
             >
-              <Heart size={18} className={liked ? "text-red-500 fill-red-500" : ""} />
+              <Heart
+                size={18}
+                className={`transition-all duration-150 ${
+                  liked ? "text-white fill-white" : ""
+                }`}
+                color={liked ? "#fff" : undefined}
+                fill={liked ? "#ef4444" : "none"}
+              />
               {likesCount} {likesCount === 1 ? "like" : "likes"}
             </Button>
           </div>
