@@ -7,7 +7,12 @@ interface VideoInfoProps {
   createdAt: string;
 }
 
-const VideoInfo: React.FC<VideoInfoProps> = ({ title, userId, createdAt, children }) => (
+const VideoInfo: React.FC<React.PropsWithChildren<VideoInfoProps>> = ({
+  title,
+  userId,
+  createdAt,
+  children,
+}) => (
   <div className="mb-6">
     <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
     <div className="flex items-center justify-between">
@@ -20,3 +25,4 @@ const VideoInfo: React.FC<VideoInfoProps> = ({ title, userId, createdAt, childre
 );
 
 export default VideoInfo;
+
