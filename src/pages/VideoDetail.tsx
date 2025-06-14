@@ -160,8 +160,18 @@ const VideoDetail = () => {
 
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Video Player */}
-        <div className="aspect-video bg-gray-900 rounded-xl mb-6 flex items-center justify-center">
-          <p className="text-white text-lg">Video Player - Recipe {id}</p>
+        <div className="aspect-video bg-gray-900 rounded-xl mb-6 flex items-center justify-center overflow-hidden">
+          {video && (video as any).video_url ? (
+            <video
+              src={(video as any).video_url}
+              autoPlay
+              controls
+              className="w-full h-full object-cover rounded-xl"
+              style={{ maxHeight: 400 }}
+            />
+          ) : (
+            <p className="text-white text-lg">Video Player - Recipe {id}</p>
+          )}
         </div>
 
         {/* Video Info */}
