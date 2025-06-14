@@ -1,13 +1,15 @@
+
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Heart } from "lucide-react";
 import FloatingHeart from "@/components/FloatingHeart";
+import VideoPlayer from "@/components/videoDetail/VideoPlayer";
+import VideoInfo from "@/components/videoDetail/VideoInfo";
+import VideoLikeButton from "@/components/videoDetail/VideoLikeButton";
+import VideoComments from "@/components/videoDetail/VideoComments";
 
 interface Comment {
   id: string;
@@ -22,24 +24,23 @@ const VideoDetail = () => {
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
-  const [likeId, setLikeId] = useState<string | null>(null); // To delete like
+  const [likeId, setLikeId] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [postingComment, setPostingComment] = useState(false);
-  const [video, setVideo] = useState<{ title: string; description: string; user_id: string; created_at: string } | null>(null);
+  const [video, setVideo] = useState<{ title: string; description: string; user_id: string; created_at: string; video_url?: string } | null>(null);
   const [videoLoading, setVideoLoading] = useState(true);
   const [showHeartAnim, setShowHeartAnim] = useState(false);
 
   const navigate = useNavigate();
 
-  // Fetch video info (optional, but makes UI look real)
   useEffect(() => {
     if (!id) return;
     setVideoLoading(true);
     supabase
       .from("videos")
-      .select("title,description,user_id,created_at")
+      .select("title,description,user_id,created_at,video_url")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => {
@@ -48,7 +49,6 @@ const VideoDetail = () => {
       });
   }, [id]);
 
-  // Fetch likes
   const fetchLikes = useCallback(() => {
     if (!id) return;
     supabase
@@ -68,7 +68,6 @@ const VideoDetail = () => {
       });
   }, [id, user]);
 
-  // Fetch comments
   const fetchComments = useCallback(() => {
     if (!id) return;
     supabase
@@ -80,7 +79,6 @@ const VideoDetail = () => {
         setComments(
           (data || []).map((c) => ({
             ...c,
-            // For now, don't resolve username
             user: c.user_id.slice(0, 8)
           }))
         );
@@ -93,7 +91,6 @@ const VideoDetail = () => {
     setLoading(false);
   }, [fetchLikes, fetchComments]);
 
-  // Like / Unlike functionality
   const handleLike = async () => {
     if (!user) {
       navigate("/login");
@@ -101,13 +98,11 @@ const VideoDetail = () => {
     }
     if (!id) return;
     if (liked && likeId) {
-      // Unlike: delete like row
       await supabase.from("video_likes").delete().eq("id", likeId);
       setLiked(false);
       setLikesCount((count) => Math.max(0, count - 1));
       setLikeId(null);
     } else {
-      // Like: insert row
       const { data, error } = await supabase.from("video_likes").insert({
         video_id: id,
         user_id: user.id,
@@ -116,13 +111,12 @@ const VideoDetail = () => {
         setLiked(true);
         setLikesCount((count) => count + 1);
         setLikeId(data.id);
-        setShowHeartAnim(true); // Show heart animation only on like
+        setShowHeartAnim(true);
       }
     }
     fetchLikes();
   };
 
-  // Comment Submission
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -154,59 +148,26 @@ const VideoDetail = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Floating heart animation */}
       <FloatingHeart show={showHeartAnim} onAnimationEnd={() => setShowHeartAnim(false)} />
       <Navigation isLoggedIn={!!user} onLogout={() => navigate('/')} />
 
       <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Video Player */}
-        <div className="aspect-video bg-gray-900 rounded-xl mb-6 flex items-center justify-center overflow-hidden">
-          {video && (video as any).video_url ? (
-            <video
-              src={(video as any).video_url}
-              autoPlay
-              controls
-              className="w-full h-full object-cover rounded-xl"
-              style={{ maxHeight: 400 }}
-            />
-          ) : (
-            <p className="text-white text-lg">Video Player - Recipe {id}</p>
-          )}
-        </div>
-
-        {/* Video Info */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            {video ? video.title : "Recipe video"}
-          </h1>
-          <div className="flex items-center justify-between">
-            <p className="text-gray-600">
-              by {video?.user_id?.slice(0, 6) || "unknown"} • {video?.created_at?.slice(0, 10)}
-            </p>
-            <Button
-              onClick={handleLike}
-              variant={liked ? "default" : "outline"}
-              className={`rounded-full flex items-center gap-2 transition-colors ${
-                liked ? "bg-red-500 text-white hover:bg-red-600" : ""
-              }`}
-              disabled={!user}
-              aria-label={liked ? "Unlike video" : "Like video"}
-              style={{ transition: "background 0.2s" }}
-            >
-              <Heart
-                size={18}
-                className={`transition-all duration-150 ${
-                  liked ? "text-white fill-white" : ""
-                }`}
-                color={liked ? "#fff" : undefined}
-                fill={liked ? "#ef4444" : "none"}
-              />
-              {likesCount} {likesCount === 1 ? "like" : "likes"}
-            </Button>
-          </div>
-        </div>
-
-        {/* Description */}
+        <VideoPlayer
+          videoUrl={video?.video_url}
+          fallbackText={`Video Player - Recipe ${id}`}
+        />
+        <VideoInfo
+          title={video ? video.title : "Recipe video"}
+          userId={video?.user_id || "unknown"}
+          createdAt={video?.created_at || ""}
+        >
+          <VideoLikeButton
+            liked={liked}
+            likesCount={likesCount}
+            disabled={!user}
+            onClick={handleLike}
+          />
+        </VideoInfo>
         <Card className="mb-8 rounded-xl">
           <CardContent className="p-6">
             <p className="text-gray-700">
@@ -215,58 +176,14 @@ const VideoDetail = () => {
             </p>
           </CardContent>
         </Card>
-
-        {/* Comments Section */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900">Comments</h2>
-
-          {/* Add Comment */}
-          <form onSubmit={handleComment} className="flex gap-4">
-            <Input
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder={user ? "Add a comment..." : "Please sign in to comment"}
-              className="flex-1 rounded-full"
-              disabled={!user || postingComment}
-            />
-            <Button
-              type="submit"
-              className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6"
-              disabled={!user || postingComment}
-            >
-              {postingComment ? "Posting..." : "Post"}
-            </Button>
-          </form>
-
-          {/* Comments List */}
-          <div className="space-y-4">
-            {comments.length === 0 && (
-              <Card className="rounded-xl">
-                <CardContent className="p-4">
-                  <p className="text-gray-400">No comments yet. Be the first to comment!</p>
-                </CardContent>
-              </Card>
-            )}
-            {comments.map((c) => (
-              <Card key={c.id} className="rounded-xl">
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-purple-600 font-medium text-sm">
-                        {c.user?.[0] || "U"}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{c.user || c.user_id.slice(0, 8)}</p>
-                      <p className="text-gray-700 mt-1 whitespace-pre-line">{c.comment}</p>
-                      <div className="text-xs text-gray-400 mt-1">{c.created_at.slice(0, 16).replace("T", " ")}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        <VideoComments
+          comments={comments}
+          user={user}
+          comment={comment}
+          postingComment={postingComment}
+          onCommentChange={setComment}
+          onSubmit={handleComment}
+        />
       </div>
     </div>
   );
