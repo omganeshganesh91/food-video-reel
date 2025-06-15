@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +22,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import VideoUploadModal from "@/components/VideoUploadModal";
@@ -35,6 +34,7 @@ interface NavigationProps {
 
 const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, signUp, signOut, user } = useAuth();
   const { toast } = useToast();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
@@ -168,6 +168,23 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
     setLoading(false);
   };
 
+  // Add a state for search input
+  const [searchInput, setSearchInput] = useState("");
+
+  // Sync the search bar value when SearchResults navigation occurs
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q') || "";
+    setSearchInput(q);
+  }, [location.pathname, location.search]);
+
+  // Handle Enter on the search bar anywhere in the nav
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchInput.trim() !== "") {
+      navigate(`/search?q=${encodeURIComponent(searchInput.trim())}`);
+    }
+  };
+
   return (
     <>
       <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100">
@@ -216,6 +233,9 @@ const Navigation = ({ isLoggedIn = false, onLogout }: NavigationProps) => {
           <Input
             placeholder="Search recipes..."
             className="w-48 rounded-full border-0 bg-gray-100 px-6 py-2 focus-visible:ring-1 focus-visible:ring-gray-300"
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
           />
           
           {isLoggedIn ? (
