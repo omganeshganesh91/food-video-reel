@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/home/HeroSection";
@@ -134,7 +135,7 @@ const Index = () => {
     <div className={`min-h-screen bg-white font-inter transition-all duration-600 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
       <Navigation />
       <HeroSection />
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div id="recipes" className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Recipes</h2>
         </div>
@@ -146,3 +147,4 @@ const Index = () => {
 };
 
 export default Index;
+
