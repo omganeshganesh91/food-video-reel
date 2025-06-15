@@ -209,7 +209,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-6">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <p>© 2023 <span className="text-gray-400">Hosur Recipes</span> Built by Out of Pâtée</p>
+          <p>© {new Date().getFullYear()} <span className="text-gray-400">Hosur Recipes</span> Built by Out of Pâtée</p>
         </div>
       </footer>
     </div>
