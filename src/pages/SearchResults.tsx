@@ -1,8 +1,10 @@
+
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import FoodOrderModal from "@/components/FoodOrderModal";
 
 const mockResults = [
   {
@@ -13,28 +15,40 @@ const mockResults = [
     likes: 24,
     comments: 12,
   },
-  // ... you can add more similar items if needed ...
+];
+
+const foodOrderList = [
+  "A – Avocado Toast",
+  "B – Butter Chicken", 
+  "C – Cheeseburger",
+  "D – Dumplings",
+  "E – Egg Fried Rice",
+  "F – Falafel",
+  "G – Gnocchi",
+  "H – Hummus",
+  "I – Ice Cream",
+  "J – Jambalaya"
 ];
 
 const SearchResults = () => {
   const navigate = useNavigate();
-  const location = window.location; // client-only
+  const location = window.location;
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState(mockResults);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [selectedFood, setSelectedFood] = useState("");
 
-  // On mount: parse the URL and populate the field and the heading
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const query = params.get('q') || "";
     setSearchTerm(query);
 
-    // For now: Filter static data, later can add Supabase search here
     const filtered = mockResults.filter(result =>
       result.title.toLowerCase().includes(query.toLowerCase()) ||
       result.creator.toLowerCase().includes(query.toLowerCase())
     );
     setResults(filtered);
-  }, [location.search]); // listen to changes
+  }, [location.search]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -44,6 +58,11 @@ const SearchResults = () => {
     if (e.key === "Enter" && searchTerm.trim() !== "") {
       navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
     }
+  };
+
+  const handleFoodOrderClick = (food: string) => {
+    setSelectedFood(food);
+    setShowOrderModal(true);
   };
 
   return (
@@ -65,9 +84,29 @@ const SearchResults = () => {
           />
         </div>
 
+        {/* Food Order Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Food (A-Z)</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {foodOrderList.map((food, index) => (
+              <Card 
+                key={index}
+                className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200"
+                onClick={() => handleFoodOrderClick(food)}
+              >
+                <div className="text-center">
+                  <h3 className="font-semibold text-lg text-gray-900">{food}</h3>
+                  <p className="text-sm text-purple-600 mt-2">Click to Order</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Recipe Results Section */}
         <h2 className="text-xl font-semibold text-gray-700 mb-6">
           {searchTerm
-            ? <>Results for <span className="text-black">&quot;{searchTerm}&quot;</span></>
+            ? <>Recipe Results for <span className="text-black">&quot;{searchTerm}&quot;</span></>
             : "All Recipes"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -108,6 +147,13 @@ const SearchResults = () => {
           ))}
         </div>
       </div>
+
+      {/* Food Order Modal */}
+      <FoodOrderModal 
+        open={showOrderModal}
+        onOpenChange={setShowOrderModal}
+        selectedFood={selectedFood}
+      />
     </div>
   );
 };
