@@ -1,16 +1,15 @@
-
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 // You can change this image to any food image hosted in your public assets, or keep as is.
 const saladImg = "/lovable-uploads/9eddf970-69ef-4507-9be0-fe3bce99d5cc.png";
 
 const Footer = () => {
-  // Scroll to recipes when clicking ORDER FOOD NOW
+  const navigate = useNavigate();
+
+  // Navigate to recipes page when clicking ORDER FOOD NOW
   const handleOrderFoodClick = () => {
-    const recipesSection = document.getElementById("recipes");
-    if (recipesSection) {
-      recipesSection.scrollIntoView({ behavior: "smooth" });
-    }
+    navigate('/search');
   };
 
   return (
