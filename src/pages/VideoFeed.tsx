@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import VideoUploadModal from "@/components/VideoUploadModal";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, MessageCircle, Play } from "lucide-react";
+import { Heart, MessageCircle, Play, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Video {
   id: string;
@@ -27,7 +28,9 @@ const VideoFeed = () => {
   const [videosLoading, setVideosLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     await signOut();
@@ -39,6 +42,57 @@ const VideoFeed = () => {
       setShowUploadModal(true);
     } else {
       navigate('/login');
+    }
+  };
+
+  const handleDeleteVideo = async (videoId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click navigation
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to delete videos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDeletingId(videoId);
+    
+    try {
+      // Delete the video from the database
+      const { error } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', videoId)
+        .eq('user_id', user.id); // Ensure user can only delete their own videos
+
+      if (error) {
+        console.error("Error deleting video:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete video. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Remove video from local state
+      setVideos(prevVideos => prevVideos.filter(video => video.id !== videoId));
+      
+      toast({
+        title: "Success",
+        description: "Video deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Error deleting video:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete video. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -192,11 +246,27 @@ const VideoFeed = () => {
             {videos.map((video) => (
               <Card
                 key={video.id}
-                className="rounded-xl p-0 bg-white shadow hover:shadow-xl transition-shadow border border-gray-200 cursor-pointer"
+                className="rounded-xl p-0 bg-white shadow hover:shadow-xl transition-shadow border border-gray-200 cursor-pointer relative"
                 onMouseEnter={() => setHoveredId(video.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 style={{ minHeight: 320, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
               >
+                {/* Delete button - only show if user owns the video */}
+                {user && video.user_id === user.id && (
+                  <Button
+                    onClick={(e) => handleDeleteVideo(video.id, e)}
+                    disabled={deletingId === video.id}
+                    className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white p-2 h-8 w-8 rounded-full shadow-lg"
+                    size="sm"
+                  >
+                    {deletingId === video.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
+                  </Button>
+                )}
+
                 <div 
                   className="relative aspect-video w-full overflow-hidden rounded-t-xl"
                   style={{ minHeight: 0, cursor: 'pointer' }}
